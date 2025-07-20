@@ -139,6 +139,8 @@ function toggleStats(cardElement, pokeId) {
         statsDiv.innerHTML = formatStatsHTML(pokemon);
         cardElement.classList.add("expanded");
         statsDiv.classList.remove("hidden");
+
+        cardElement.scrollIntoView({behavior: "smooth", block: "start"});
     })
     .catch(() => {
         statsDiv.innerHTML = `<p>Failed to load stats.</p>`;

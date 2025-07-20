@@ -10,19 +10,27 @@ const teamList = document.getElementById("teamList")
 
 localStorage.removeItem("team")
 let team = JSON.parse(localStorage.getItem("team")) || [];
+let currentFetchController = null;
 
 
-fetchBtn.addEventListener("click", () => {
+
+fetchBtn.addEventListener("click", onFetchClick)
+addTeamBtn.addEventListener("click", onAddTeamClick)
+
+
+async function onFetchClick() {
     const query = pokeInput.value.trim().toLowerCase();
     if (!query) {
         alert("Enter a name or ID");
         return;
     }
-    fetchPokemon(query);
-});
+    await fetchPokemon(query);
+}
 
 
-addTeamBtn.addEventListener("click", () => {
+
+
+function onAddTeamClick() {
     const id = pokeDisplay.dataset.pokeId;
     const name = pokeName.textContent.split(" ")[1];
     const img = pokeImage.src;
@@ -37,37 +45,46 @@ addTeamBtn.addEventListener("click", () => {
     team.push({ id, name, img });
     localStorage.setItem("team", JSON.stringify(team));
     renderTeam();
-});
+}
 
+async function fetchPokemon(query) {
+  // Cancel any prior request
+  if (currentFetchController) {
+    currentFetchController.abort();
+  }
+  currentFetchController = new AbortController();
+  const { signal } = currentFetchController;
 
-function fetchPokemon(query) {
-    const url = `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(query)}`;
-    const MIN_SPINNER_MS = 500;
-    const start = performance.now();
+  const url = `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(query)}`;
+  const MIN_SPINNER_MS = 500;
+  const start = performance.now();
 
-    toggleSpinner(true);
-    fetchBtn.disabled = true;
+  toggleSpinner(true);
+  fetchBtn.disabled = true;
 
-    fetch(url)
-        .then(res => {
-            if (!res.ok) throw new Error("not found");
-            return res.json();
-        })
-        .then(displayPokemon)
-        .catch(err => alert(err.message))
-        .finally(() => {
-            const elapsed = performance.now() - start;
-            const hide = () => {
-                toggleSpinner(false);
-                fetchBtn.disabled = false;
-            };
+  try {
+    const res = await fetch(url, { signal });
+    if (!res.ok) throw new Error("not found");
+    const data = await res.json();
+    displayPokemon(data);
+  } catch (err) {
+    // If aborted, err.name === 'AbortError'
+    if (err.name !== 'AbortError') {
+      alert(err.message);
+    }
+  } finally {
+    const elapsed = performance.now() - start;
+    const hide = () => {
+      toggleSpinner(false);
+      fetchBtn.disabled = false;
+    };
 
-            if (elapsed < MIN_SPINNER_MS) {
-                setTimeout(hide, MIN_SPINNER_MS - elapsed);
-            } else {
-                hide();
-            }
-        });
+    if (elapsed < MIN_SPINNER_MS) {
+      setTimeout(hide, MIN_SPINNER_MS - elapsed);
+    } else {
+      hide();
+    }
+  }
 }
 
 
@@ -124,27 +141,25 @@ function createTeamCard(pokemon) {
     return li;
 }
 
-function toggleStats(cardElement, pokeId) {
-    const statsDiv = cardElement.querySelector(".poke-stats");
+async function toggleStats(cardElement, pokeId) {
+  const statsDiv = cardElement.querySelector(".poke-stats");
 
-    if (cardElement.classList.contains("expanded")) {
-        cardElement.classList.remove("expanded");
-        statsDiv.classList.add("hidden");
-        return;
-    }
+  if (cardElement.classList.contains("expanded")) {
+    cardElement.classList.remove("expanded");
+    statsDiv.classList.add("hidden");
+    return;
+  }
 
-    fetch(`https://pokeapi.co/api/v2/pokemon/${pokeId}`)
-    .then(res => res.json())
-    .then(pokemon => {
-        statsDiv.innerHTML = formatStatsHTML(pokemon);
-        cardElement.classList.add("expanded");
-        statsDiv.classList.remove("hidden");
-
-        cardElement.scrollIntoView({behavior: "smooth", block: "start"});
-    })
-    .catch(() => {
-        statsDiv.innerHTML = `<p>Failed to load stats.</p>`;
-    })
+  try {
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokeId}`);
+    const pokemon = await res.json();
+    statsDiv.innerHTML = formatStatsHTML(pokemon);
+    cardElement.classList.add("expanded");
+    statsDiv.classList.remove("hidden");
+    cardElement.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch {
+    statsDiv.innerHTML = `<p>Failed to load stats.</p>`;
+  }
 }
 
 function formatStatsHTML(pokemon) {

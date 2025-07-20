@@ -8,14 +8,19 @@ const pokeDetails = document.getElementById("pokeDetails")
 const addTeamBtn = document.getElementById("addTeamBtn")
 const teamList = document.getElementById("teamList")
 
-
+localStorage.removeItem("team")
 let team = JSON.parse(localStorage.getItem("team")) || [];
 
 
 fetchBtn.addEventListener("click", () => {
     const query = pokeInput.value.trim().toLowerCase();
-    if (!query) { alert("Enter a name or ID"); return }
+    if (!query) {
+        alert("Enter a name or ID");
+        return;
+    }
+    fetchPokemon(query);
 });
+
 
 addTeamBtn.addEventListener("click", () => {
     const id = pokeDisplay.dataset.pokeId;
@@ -31,12 +36,16 @@ addTeamBtn.addEventListener("click", () => {
     }
     team.push({ id, name, img });
     localStorage.setItem("team", JSON.stringify(team));
+    renderTeam();
 });
 
 
 function fetchPokemon(query) {
     const url = `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(query)}`;
-    toggleSpinner(true)
+    const MIN_SPINNER_MS = 500;
+    const start = performance.now();
+
+    toggleSpinner(true);
     fetchBtn.disabled = true;
 
     fetch(url)
@@ -47,8 +56,17 @@ function fetchPokemon(query) {
         .then(displayPokemon)
         .catch(err => alert(err.message))
         .finally(() => {
-            toggleSpinner(false);
-            fetchBtn.disabled = false;
+            const elapsed = performance.now() - start;
+            const hide = () => {
+                toggleSpinner(false);
+                fetchBtn.disabled = false;
+            };
+
+            if (elapsed < MIN_SPINNER_MS) {
+                setTimeout(hide, MIN_SPINNER_MS - elapsed);
+            } else {
+                hide();
+            }
         });
 }
 
@@ -68,7 +86,7 @@ function displayPokemon(pokemon) {
         `Height: ${pokemon.height / 10}m`,
         `Weight: ${pokemon.weight / 10}kg`
     ];
-    
+
     stats.forEach(text => {
         const li = document.createElement("li");
         li.textContent = text;
@@ -83,7 +101,7 @@ function displayPokemon(pokemon) {
 
 
 function toggleSpinner(show) {
-    spinner.classList.toggle("hidden", !show)
+    spinner.classList.toggle("show", show)
 }
 
 
@@ -105,3 +123,5 @@ function renderTeam() {
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+renderTeam();

@@ -48,6 +48,34 @@ button:hover {
   animation: fadeIn 0.4s ease-out forwards;
 }
 
+.poke-stats {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid #39e9ff;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.team-card.expanded .poke-stats {
+  max-height: 300px;
+  opacity: 1;
+}
+
+.team-card img {
+  cursor: pointer;
+}
+
+.team-card img:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px #39e9ff;
+}
+
 /* Spinner Overlay */
 #spinner {
   display: none;

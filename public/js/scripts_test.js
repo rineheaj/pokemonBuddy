@@ -1,4 +1,4 @@
-import { getPokemon } from "./api_js_helper.js";
+import { getPokemon } from "../js/api_js_helper.js";
 
 const fetchBtn = document.getElementById("fetchBtn");
 const pokeInput = document.getElementById("pokeInput");
@@ -46,7 +46,6 @@ function onAddTeamClick() {
     return;
   }
 
-  // Only store minimal info in localStorage
   team.push({
     id: data.id,
     name: capitalize(data.name),

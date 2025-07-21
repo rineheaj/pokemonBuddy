@@ -1,4 +1,4 @@
-import { getPokemon } from "./api_js_helper.js";
+import { getPokemon } from "./api_js_helper"
 
 
 const fetchBtn = document.getElementById("fetchBtn")

@@ -172,15 +172,17 @@ async function renderTeam() {
 
   // Preload every teammate's data in parallel
   const allData = await Promise.all(
-    saved.map(member => getPokemon(member.id))
+    saved.map(async member => {
+      if (pokemonCache[member.id]) {
+        return pokemonCache[member.id];
+      }
+      const data = await getPokemon(member.id);
+      pokemonCache[data.id] = data;
+      return data;
+    })
   );
-  // Populate cache
-  allData.forEach(data => {
-    pokemonCache[data.id] = data;
-  });
 
-  // Create cards from cached data
-  saved.forEach(member => {
+  allData.forEach(pokemon => {
     const pokemon = pokemonCache[member.id];
     const card = createTeamCard(pokemon);
     teamList.appendChild(card);

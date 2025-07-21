@@ -5,6 +5,7 @@ export async function getPokemon(query, signal) {
     const response = await fetch(url, { signal });
 
     if (!response.ok) throw new Error(`Pokemon ${query} not found`);
-    console.log(response.json())
-    return response.json();
+    const data = await response.json();
+    console.log(data);
+    return data;
 }

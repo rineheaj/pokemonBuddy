@@ -183,7 +183,6 @@ async function renderTeam() {
   );
 
   allData.forEach(pokemon => {
-    const pokemon = pokemonCache[member.id];
     const card = createTeamCard(pokemon);
     teamList.appendChild(card);
   });
